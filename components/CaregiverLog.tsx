@@ -1,3 +1,5 @@
+
+
 // Implemented the missing CaregiverLog component.
 
 import React, { useState } from 'react';
@@ -13,9 +15,10 @@ interface CaregiverLogProps {
   notes: CaregiverNote[];
   familyMembers: FamilyMember[];
   onAddNote: (note: Omit<CaregiverNote, 'id' | 'timestamp'>) => void;
+  onDeleteNote: (noteId: string) => void;
 }
 
-const CaregiverLog: React.FC<CaregiverLogProps> = ({ notes, familyMembers, onAddNote }) => {
+const CaregiverLog: React.FC<CaregiverLogProps> = ({ notes, familyMembers, onAddNote, onDeleteNote }) => {
   const initialNoteState = {
     familyMemberId: familyMembers.length > 0 ? familyMembers[0].id : '',
     author: '',
@@ -102,7 +105,18 @@ const CaregiverLog: React.FC<CaregiverLogProps> = ({ notes, familyMembers, onAdd
                 <h4 className="font-bold text-primary-light">{familyMemberMap.get(note.familyMemberId) || '알 수 없음'}</h4>
                 <p className="text-sm text-slate-400">작성자: {note.author}</p>
               </div>
-              <p className="text-xs text-slate-500">{new Date(note.timestamp).toLocaleString('ko-KR')}</p>
+              <div className="flex items-center space-x-2 shrink-0">
+                 <p className="text-xs text-slate-500">{new Date(note.timestamp).toLocaleString('ko-KR')}</p>
+                 <Button
+                    variant="danger"
+                    size="sm"
+                    className="!p-1.5"
+                    onClick={() => onDeleteNote(note.id)}
+                    aria-label="노트 삭제"
+                 >
+                    <Icon name="trash" className="w-4 h-4" />
+                 </Button>
+              </div>
             </div>
             <p className="mt-3 text-slate-300 whitespace-pre-wrap">{note.note}</p>
           </Card>

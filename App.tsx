@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useState } from 'react';
 import { View, FamilyMember, HealthMetricRecord, Appointment, CaregiverNote, Vaccination, HealthCheckup, Medication } from './types';
@@ -75,6 +76,10 @@ const App: React.FC = () => {
     setCaregiverNotes(prev => [...prev, newNote]);
   };
 
+  const handleDeleteNote = (noteId: string) => {
+    setCaregiverNotes(prev => prev.filter(n => n.id !== noteId));
+  };
+
   const handleUpdateVaccinationStatus = (vaccinationId: string, isCompleted: boolean) => {
     setVaccinations(prev => prev.map(v => v.id === vaccinationId ? { ...v, completed: isCompleted } : v));
   };
@@ -129,7 +134,7 @@ const App: React.FC = () => {
                   onDeleteCheckup={handleDeleteCheckup}
                 />;
       case '요양사 노트':
-        return <CaregiverLog notes={caregiverNotes} familyMembers={familyMembers} onAddNote={handleAddNote} />;
+        return <CaregiverLog notes={caregiverNotes} familyMembers={familyMembers} onAddNote={handleAddNote} onDeleteNote={handleDeleteNote} />;
       case '복약 관리':
         return <MedicationManager medications={medications} familyMembers={familyMembers} onAddMedication={handleAddMedication} onUpdateMedication={handleUpdateMedication} onDeleteMedication={handleDeleteMedication} />;
       case 'AI 분석':

@@ -10,7 +10,8 @@ interface VaccinationTrackerProps {
 }
 
 const VaccinationTracker: React.FC<VaccinationTrackerProps> = ({ vaccinations, familyMembers, onUpdateStatus }) => {
-  const familyMemberMap = new Map(familyMembers.map(m => [m.id, m]));
+  // Fix: Explicitly type the Map to ensure correct type inference for its values.
+  const familyMemberMap = new Map<string, FamilyMember>(familyMembers.map(m => [m.id, m]));
   
   const vaccinationsByMember: { [key: string]: Vaccination[] } = {};
   vaccinations.forEach(v => {

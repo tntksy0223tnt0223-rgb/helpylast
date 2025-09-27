@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Vaccination, HealthCheckup, FamilyMember } from '../types';
+import React, { useState, useCallback } from 'react';
+import { Vaccination, HealthCheckup, FamilyMember, VaccinationRecommendation } from '../types';
+import { getVaccinationRecommendations } from '../services/geminiService';
 import Card from './common/Card';
 import Button from './common/Button';
 import Icon from './common/Icon';
@@ -42,6 +43,12 @@ const HealthManagement: React.FC<HealthManagementProps> = ({
 
   const [isVaccinationModalOpen, setIsVaccinationModalOpen] = useState(false);
   const [editingVaccination, setEditingVaccination] = useState<Vaccination | null>(null);
+
+  // AI Plan states
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [vaccinePlan, setVaccinePlan] = useState<VaccinationRecommendation[]>([]);
+  const [isPlanLoading, setIsPlanLoading] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
 
   const dataByMember: { [key: string]: { member: FamilyMember, vaccinations: Vaccination[], healthCheckups: HealthCheckup[] } } = {};
 
@@ -121,9 +128,41 @@ const HealthManagement: React.FC<HealthManagementProps> = ({
     onDeleteCheckup(id);
   };
 
+  const handleFetchVaccinePlan = useCallback(async () => {
+    if (familyMembers.length === 0) {
+      setPlanError('예방접종 계획을 추천받을 가족 구성원이 등록되어 있지 않습니다.');
+      return;
+    }
+    try {
+      setIsPlanLoading(true);
+      setPlanError(null);
+      setVaccinePlan([]);
+      const recommendations = await getVaccinationRecommendations(familyMembers);
+      setVaccinePlan(recommendations);
+    } catch (error) {
+      console.error(error);
+      setPlanError('AI 예방접종 계획을 불러오는 데 실패했습니다.');
+    } finally {
+      setIsPlanLoading(false);
+    }
+  }, [familyMembers]);
+
+  const handleOpenPlanModal = () => {
+      setIsPlanModalOpen(true);
+      handleFetchVaccinePlan();
+  };
+
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6 text-slate-100">건강 관리</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-slate-100">건강 관리</h2>
+        <Button onClick={handleOpenPlanModal}>
+          <div className="flex items-center space-x-2">
+            <Icon name="sparkles" className="w-5 h-5 text-yellow-300"/>
+            <span>AI 예방접종 계획 추천</span>
+          </div>
+        </Button>
+      </div>
       <div className="space-y-8">
         {familyMembers.length > 0 ? (
           Object.values(dataByMember).map(({ member, vaccinations, healthCheckups }) => (
@@ -267,6 +306,39 @@ const HealthManagement: React.FC<HealthManagementProps> = ({
             </form>
         </Modal>
       )}
+
+      <Modal isOpen={isPlanModalOpen} onClose={() => setIsPlanModalOpen(false)} title="AI 가족 예방접종 계획 (1년)">
+        <div className="space-y-4 min-h-[200px]">
+          {isPlanLoading ? (
+            <div className="flex justify-center items-center h-full">
+              <p className="text-slate-400 text-center animate-pulse">AI가 맞춤 예방접종 계획을 생성 중입니다...</p>
+            </div>
+          ) : planError ? (
+            <div className="flex justify-center items-center h-full">
+              <p className="text-red-400 text-center">{planError}</p>
+            </div>
+          ) : vaccinePlan.length > 0 ? (
+            <ul className="space-y-4 text-sm">
+              {vaccinePlan.map(rec => (
+                <li key={rec.familyMemberId}>
+                  <p className="font-bold text-primary-light">{rec.familyMemberName}</p>
+                  <ul className="list-disc list-inside pl-2 text-slate-300 mt-1">
+                    {rec.recommendedVaccines.length > 0 ? rec.recommendedVaccines.map((vaccine, idx) => (
+                      <li key={idx}>{vaccine.name} <span className="text-slate-500">({vaccine.reason})</span></li>
+                    )) : (
+                      <li>향후 1년 내 필수 권장 접종이 없습니다.</li>
+                    )}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <p className="text-slate-400 text-center">추천할 예방접종 정보가 없습니다.</p>
+            </div>
+          )}
+        </div>
+      </Modal>
 
     </div>
   );

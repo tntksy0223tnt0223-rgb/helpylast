@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Appointment, CaregiverNote, FamilyMember, VaccinationRecommendation } from '../types';
-import { getVaccinationRecommendations } from '../services/geminiService';
+import React from 'react';
+import { Appointment, CaregiverNote, FamilyMember } from '../types';
 import Card from './common/Card';
 import Icon from './common/Icon';
 
@@ -9,31 +8,6 @@ const Dashboard: React.FC<{
   caregiverNotes: CaregiverNote[];
   familyMembers: FamilyMember[];
 }> = ({ appointments, caregiverNotes, familyMembers }) => {
-
-  const [vaccinePlan, setVaccinePlan] = useState<VaccinationRecommendation[]>([]);
-  const [isPlanLoading, setIsPlanLoading] = useState(true);
-  const [planError, setPlanError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchVaccinePlan = async () => {
-      if (familyMembers.length === 0) {
-        setIsPlanLoading(false);
-        return;
-      }
-      try {
-        setIsPlanLoading(true);
-        setPlanError(null);
-        const recommendations = await getVaccinationRecommendations(familyMembers);
-        setVaccinePlan(recommendations);
-      } catch (error) {
-        console.error(error);
-        setPlanError('AI 예방접종 계획을 불러오는 데 실패했습니다.');
-      } finally {
-        setIsPlanLoading(false);
-      }
-    };
-    fetchVaccinePlan();
-  }, [familyMembers]);
 
   const familyMemberMap = new Map(familyMembers.map(m => [m.id, m.name]));
 
@@ -65,44 +39,7 @@ const Dashboard: React.FC<{
         <p className="mt-2 text-lg text-slate-400">오늘의 건강 소식을 확인하세요.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Vaccination and Checkup Guide */}
-        <Card title="예방접종 및 건강검진 안내">
-          <div className="space-y-4">
-            <p className="text-sm text-slate-400">
-              정기적인 예방접종과 건강검진은 질병을 예방하고 조기에 발견하는 가장 효과적인 방법입니다. 특히 연령에 따라 권장되는 항목이 다르므로 꾸준한 관심이 필요합니다.
-            </p>
-            <div className="border-t border-slate-700 pt-4">
-              <h4 className="font-semibold text-slate-200 mb-3 flex items-center space-x-2">
-                <Icon name="syringe" className="w-5 h-5 text-primary-light" />
-                <span>AI 가족 예방접종 계획 (1년)</span>
-              </h4>
-              {isPlanLoading ? (
-                <p className="text-slate-400 text-center animate-pulse">AI가 맞춤 예방접종 계획을 생성 중입니다...</p>
-              ) : planError ? (
-                <p className="text-red-400 text-center">{planError}</p>
-              ) : vaccinePlan.length > 0 ? (
-                <ul className="space-y-4 text-sm">
-                  {vaccinePlan.map(rec => (
-                    <li key={rec.familyMemberId}>
-                      <p className="font-bold text-primary-light">{rec.familyMemberName}</p>
-                      <ul className="list-disc list-inside pl-2 text-slate-300 mt-1">
-                        {rec.recommendedVaccines.length > 0 ? rec.recommendedVaccines.map((vaccine, idx) => (
-                          <li key={idx}>{vaccine.name} <span className="text-slate-500">({vaccine.reason})</span></li>
-                        )) : (
-                          <li>향후 1년 내 필수 권장 접종이 없습니다.</li>
-                        )}
-                      </ul>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-slate-400 text-center">추천할 예방접종 정보가 없습니다.</p>
-              )}
-            </div>
-          </div>
-        </Card>
-        
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upcoming Appointments */}
         <Card title="다가오는 일정">
           {upcomingAppointments.length > 0 ? (
