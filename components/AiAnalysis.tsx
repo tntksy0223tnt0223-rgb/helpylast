@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { FamilyMember, CaregiverNote, HealthMetricRecord } from '../types';
 import { getComprehensiveHealthAnalysis } from '../services/geminiService';
@@ -44,6 +45,23 @@ const AiAnalysis: React.FC<AiAnalysisProps> = ({ familyMembers, caregiverNotes, 
     }
   }, [selectedMemberId, familyMembers, caregiverNotes, healthMetrics]);
   
+  const renderAnalysisResult = (text: string) => {
+    const parts = text.split(/(\*\*\*.*?\*\*\*)/g);
+
+    return parts.map((part, index) => {
+        if (part.startsWith('***') && part.endsWith('***')) {
+            const content = part.slice(3, -3);
+            return (
+                <span key={index} className="font-bold text-amber-400 inline-flex items-center">
+                    <Icon name="warning" className="w-5 h-5 mr-1.5 shrink-0" />
+                    {content}
+                </span>
+            );
+        }
+        return <React.Fragment key={index}>{part}</React.Fragment>;
+    });
+  };
+
   return (
     <div className="space-y-8">
       {/* Comprehensive Analysis Section */}
@@ -100,7 +118,7 @@ const AiAnalysis: React.FC<AiAnalysisProps> = ({ familyMembers, caregiverNotes, 
             <div className="mt-6">
               <h3 className="text-lg font-semibold text-primary-light mb-2">AI 종합 건강 분석 리포트</h3>
               <div className="text-slate-300 whitespace-pre-wrap leading-relaxed bg-slate-900/50 p-4 rounded-lg">
-                {analysisResult}
+                {renderAnalysisResult(analysisResult)}
               </div>
             </div>
         )}

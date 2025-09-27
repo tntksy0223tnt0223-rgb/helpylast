@@ -269,11 +269,26 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({
           const prev = previousValue as BloodPressure;
           const sysChange = current.systolic - prev.systolic;
           const diaChange = current.diastolic - prev.diastolic;
-          return `(${sysChange > 0 ? '+' : ''}${sysChange}/${diaChange > 0 ? '+' : ''}${diaChange})`;
+          
+          if (sysChange === 0 && diaChange === 0) return null;
+
+          const sysColor = sysChange > 0 ? 'text-red-400' : 'text-blue-400';
+          const diaColor = diaChange > 0 ? 'text-red-400' : 'text-blue-400';
+
+          return (
+            <span className="ml-2 text-xs font-semibold">
+                (<span className={sysChange !== 0 ? sysColor : 'text-slate-500'}>{sysChange > 0 ? '+' : ''}{sysChange}</span>
+                /
+                <span className={diaChange !== 0 ? diaColor : 'text-slate-500'}>{diaChange > 0 ? '+' : ''}{diaChange}</span>)
+            </span>
+          );
       } else {
           const change = (currentValue as number) - (previousValue as number);
           if (change === 0) return null;
-          return `(${(change > 0 ? '+' : '')}${change.toFixed(1)})`;
+          
+          const color = change > 0 ? 'text-red-400' : 'text-blue-400';
+
+          return <span className={`ml-2 text-xs font-semibold ${color}`}>({(change > 0 ? '+' : '')}{change.toFixed(1)})</span>;
       }
   };
   
@@ -463,26 +478,24 @@ const FamilyManager: React.FC<FamilyManagerProps> = ({
                                     <td className="px-4 py-3">
                                         {metric.type === 'weight' ? 
                                             <span>
-                                                {/* Fix: Cast metric.value to number to resolve ReactNode type error. */}
                                                 {metric.value as number}
-                                                <span className="ml-2 text-xs text-slate-500">{getMetricChange('weight', index)}</span>
+                                                {getMetricChange('weight', index)}
                                             </span> 
                                             : '-'}
                                     </td>
                                     <td className="px-4 py-3">
                                         {bp ? 
-                                            <span>
+                                            <span className="font-semibold text-blue-400">
                                                 {`${bp.systolic}/${bp.diastolic}`}
-                                                <span className="ml-2 text-xs text-slate-500">{getMetricChange('bloodPressure', index)}</span>
+                                                {getMetricChange('bloodPressure', index)}
                                             </span> 
                                             : '-'}
                                     </td>
                                     <td className="px-4 py-3">
                                         {metric.type === 'bloodGlucose' ? 
-                                            <span>
-                                                {/* Fix: Cast metric.value to number to resolve ReactNode type error. */}
+                                            <span className="font-semibold text-red-400">
                                                 {metric.value as number}
-                                                 <span className="ml-2 text-xs text-slate-500">{getMetricChange('bloodGlucose', index)}</span>
+                                                {getMetricChange('bloodGlucose', index)}
                                             </span> 
                                             : '-'}
                                     </td>
